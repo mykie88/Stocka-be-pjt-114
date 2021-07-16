@@ -13,17 +13,19 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from allauth.account.views import confirm_email
-from django.conf.urls import url
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import path, include
+from django.views.generic import TemplateView, RedirectView
+from django.conf.urls import url
+from django.contrib.auth import views
+from allauth.account.views import confirm_email
+
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
-from rest_auth.views import PasswordResetConfirmView
+#from rest_auth.views import PasswordResetConfirmView
 from rest_framework import permissions
 #  Documentation
 from rest_framework.documentation import include_docs_urls
-from users import views
 
 API_TITLE = "Stocka API"
 API_DESCRIPTION = "A Web API to the Stocka Project."
@@ -53,12 +55,35 @@ urlpatterns = [
     path('accounts/', include('allauth.urls')),
 
     # urls to password reset and registration verification
-    url(r"stocka_api/v1/accounts-rest/registration/account-confirm-email/(?P<key>.+)/$",
-        confirm_email, name="account_confirm_email"),
-    url(r"^stocka_api/v1/registration/complete/$",
-        views.success_view, name="account_confirm_complete"),
-    path("stocka_api/v1/password_reset/",
-         include("django_rest_passwordreset.urls", namespace="password_reset")),
+
+
+    url(
+        r'^stocka_api/v1/accounts-rest/password_change/$', views.PasswordChangeView.as_view(),
+        name='password_change'),
+    url(
+        r'^stocka_api/v1/accounts-rest/password_change/done/$',
+        views.PasswordChangeDoneView.as_view(),
+        name='password_change_done'),
+    url(
+        r'^stocka_api/v1/accounts-rest/password_reset/$', views.PasswordResetView.as_view(),
+        name='password_reset'
+        ),
+    url(
+        r'^stocka_api/v1/accounts-rest/done/$',
+        views.PasswordResetDoneView.as_view(),
+        name='password_reset_done'),
+    url(
+        r'^stocka_api/v1/accounts-rest/password_reset/done/$',
+        views.PasswordResetDoneView.as_view(),
+        name='password_reset_done'),
+
+    
+    url(
+        r'^password-reset/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$', views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+
+    url(
+        r'^stocka_api/v1/accounts-rest/registration/account-confirm-email/(?P<key>.+)/$',
+        confirm_email, name='account_confirm_email'),
 
     # urls to the doc
     path('docs/', include_docs_urls(title=API_TITLE, description=API_DESCRIPTION)),
